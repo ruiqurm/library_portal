@@ -4,3 +4,4 @@ __pycache__
 00*.py
 *.sqlite3
 *.yml
+static
