@@ -99,3 +99,5 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         self.validated_data["password"] = make_password(self.validated_data["password"])
         return super(UserCreateSerializer,self).save(**kwargs)
+
+

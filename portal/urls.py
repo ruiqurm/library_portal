@@ -14,6 +14,15 @@ router.register(r'database/detail', DatabaseRetrieveViewset)
 router.register(r'announcement', AnnouncementViewset)
 router.register(r'announcement/detail', AnnouncementRetrieveViewset)
 router.register(r'admin/user',UserViewset)
+router.register(r'admin/subject',DatabaseSubjectAdminViewset)
+router.register(r'admin/source',DatabaseSourceAdminViewset)
+router.register(r'admin/category',DatabaseCategoryAdminViewset)
+router.register(r'admin/database',DatabaseAdminViewset)
+router.register(r'admin/databaseVist',DatabaseVisitAdminViewset)
+router.register(r'admin/feedback',FeedbackAdminViewset)
+router.register(r'admin/announcement',AnnouncementAdminViewset)
+router.register(r'admin/announcementVisit',AnnouncementVisitAdminViewset)
+
 # The API URLs are now determined automatically by the router.
 urlpatterns = [
     path('', include(router.urls)),
