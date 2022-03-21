@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from django.contrib.auth.hashers import make_password
 class MyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
@@ -78,3 +79,23 @@ class AnnouncementVisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnnouncementVisit
         fields = "__all__"
+
+
+"""
+For admin
+"""
+class UserSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(read_only=True)
+    class Meta:
+        model = MyUser
+        fields = ("id","username","is_superuser","first_name","last_name","email","is_active","avatar")
+
+class UserCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MyUser
+        fields = ("username","password",)
+
+    def save(self, **kwargs):
+        self.validated_data["password"] = make_password(self.validated_data["password"])
+        return super(UserCreateSerializer,self).save(**kwargs)
