@@ -11,10 +11,11 @@ virtualenv .venv
 ```shell
 pip install -r requirements.txt
 ```
-* 生成数据库
+* 生成数据库和静态文件
 ```
 python .\manage.py makemigrations  
 python .\manage.py migrate
+python .\manage.py collectstatic
 ```
 * 生成超级用户(optional)
 ```shell
