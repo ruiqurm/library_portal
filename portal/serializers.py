@@ -24,7 +24,7 @@ class DatabaseGeneralSerializer(serializers.ModelSerializer):
     publisher = MyUserSerializer()
     category = DatabaseCategorySerializer()
     source = DatabaseSourceSerializer()
-    subject = DatabaseSubjectSerializer()
+    subject = DatabaseSubjectSerializer(many=True)
     class Meta:
         model = Database
         exclude = ('cn_content', 'en_content')

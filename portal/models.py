@@ -21,6 +21,7 @@ class DatabaseSubject(models.Model):
     class Meta:
         verbose_name = "数据库学科"
         verbose_name_plural = verbose_name
+        unique_together = ("cn_name","en_name")
 
     def __str__(self):
         return f"{self.cn_name}  {self.en_name}"
@@ -33,6 +34,7 @@ class DatabaseSource(models.Model):
     class Meta:
         verbose_name = "数据库来源"
         verbose_name_plural = verbose_name
+        unique_together = ("cn_name","en_name")
 
     def __str__(self):
         return f"{self.cn_name}  {self.en_name}"
@@ -45,6 +47,7 @@ class DatabaseCategory(models.Model):
     class Meta:
         verbose_name = "数据库分类"
         verbose_name_plural = verbose_name
+        unique_together = ("cn_name","en_name")
 
     def __str__(self):
         return f"{self.cn_name}  {self.en_name}"
@@ -56,7 +59,7 @@ class Database(models.Model):
     en_name = models.TextField(verbose_name="资源英文名称")
     category = models.ForeignKey(DatabaseCategory, verbose_name="类别", on_delete=models.SET_NULL, null=True)
     source = models.ForeignKey(DatabaseSource, verbose_name="来源", on_delete=models.SET_NULL, null=True)
-    subject = models.ForeignKey(DatabaseSubject, verbose_name="学科", on_delete=models.SET_NULL, null=True)
+    subject = models.ManyToManyField(DatabaseSubject, verbose_name="学科", null=True)
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     update_time = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     # visits = models.IntegerField(verbose_name="总访问量", default=0)
@@ -72,6 +75,7 @@ class Database(models.Model):
         verbose_name = "数据库"
         verbose_name_plural = verbose_name
         ordering = ['-update_time', '-create_time']
+        unique_together = ("cn_name","en_name")
 
     def __str__(self):
         return f"{self.cn_name}  {self.en_name}"
