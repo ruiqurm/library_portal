@@ -17,6 +17,13 @@ python .\manage.py makemigrations
 python .\manage.py migrate
 python .\manage.py collectstatic
 ```
+* 自动添加数据  
+powershell  
+在项目根目录下
+```shell
+$env:PYTHONPATH=pwd
+python .\tools\generator.py
+```
 * 生成超级用户(optional)
 ```shell
 python .\manage.py createsuperuser
