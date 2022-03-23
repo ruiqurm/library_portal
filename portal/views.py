@@ -22,6 +22,10 @@ class DatabaseListFilter(filters.FilterSet):
     en_source = filters.CharFilter(field_name="source__en_name", lookup_expr="iexact", label="来源（英文）")
     en_subject = filters.CharFilter(field_name="subject__en_name", lookup_expr='iexact', label="学科（英文）")
     first_letter = filters.CharFilter(method="filter_by_first_letter", label='第一个字母')
+    cn_name = filters.CharFilter(field_name="cn_name",lookup_expr='icontains', label='中文标题')
+    en_name = filters.CharFilter(field_name="en_name",lookup_expr='icontains', label='英文标题')
+    cn_content = filters.CharFilter(field_name="cn_content",lookup_expr='icontains', label='中文内容')
+    en_content = filters.CharFilter(field_name="en_content",lookup_expr='icontains', label='英文内容')
 
     def filter_by_first_letter(self, queryset, name, value, *args, **kwargs):
         if len(value) == 1 and value.isalpha():
@@ -93,6 +97,7 @@ class DatabaseRetrieveViewset(GenericViewSet, RetrieveModelMixin):
     lookup_field = "id"
     schema = AutoSchema(
         tags=['Database'],
+        operation_id_base='databaseRetrieve',
     )
     def retrieve(self, request, *args, **kwargs):
         """
@@ -120,35 +125,45 @@ class DatabaseRetrieveViewset(GenericViewSet, RetrieveModelMixin):
 
 from datetime import date
 
+class FeedbackView(APIView):
+    schema = AutoSchema(
+        tags=['Feedback'],
+        operation_id_base='FeedbackCreate',
+    )
+    def post(request: Request):
+        """
+        新建一个反馈
 
-@api_view(['POST'])
-def create_feedback(request: Request):
-    """
-    新建一个反馈
-
-    每个ip每天可以新建2个反馈
-    """
-    data = dict(request.data)
-    ip = request.META.get("REMOTE_ADDR")
-    data["ip"] = ip
-    today = date.today()
-    if Feedback.objects.filter(create_time__year=today.year, create_time__month=today.month, create_time__day=today.day,
-                               ip=ip).count() > 2:
-        return Response({"msg": "You can feedback at largest 3 times a day"}, status=403)
-    save_data = FeedbackSerializer(data=data)
-    save_data.is_valid(raise_exception=True)
-    save_data.save()
-    return Response(save_data.data, status=201)
-
+        每个ip每天可以新建2个反馈
+        """
+        data = dict(request.data)
+        ip = request.META.get("REMOTE_ADDR")
+        data["ip"] = ip
+        today = date.today()
+        if Feedback.objects.filter(create_time__year=today.year, create_time__month=today.month, create_time__day=today.day,
+                                   ip=ip).count() > 2:
+            return Response({"msg": "You can feedback at largest 3 times a day"}, status=403)
+        save_data = FeedbackSerializer(data=data)
+        save_data.is_valid(raise_exception=True)
+        save_data.save()
+        return Response(save_data.data, status=201)
 
 class AnnouncementFilter(filters.FilterSet):
-    has_database = filters.CharFilter(method='has_database',label="是否关联数据库")
+    has_database = filters.CharFilter(method='_has_database',label="是否关联数据库")
+    database_id = filters.CharFilter(method='_database_id',label="数据库id")
 
-    def has_database(self, queryset: Announcement.objects.all(), name, value, *args, **kwargs):
-        check = False
-        if value.strip().lower() == "true":
-            check = True
-        return queryset.filter(database_isnull=check)
+    def _has_database(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
+        if value.lower() == "true":
+            return queryset.filter(database__isnull=False)
+        elif value.lower() == "false":
+            return queryset.filter(database__isnull=True)
+        else:
+            return queryset
+    def _database_id(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
+        if value.isdigit():
+            return queryset.filter(database_id=value)
+        else:
+            return queryset
 
 
 class AnnouncementViewset(GenericViewSet, ListModelMixin):
@@ -167,6 +182,8 @@ class AnnouncementViewset(GenericViewSet, ListModelMixin):
         获取公告的列表
 
         支持分页和筛选。每页限制最大为20
+
+        过滤选项可以填null或者数字，数字表示数据库的id，null表示未连接数据库
         """
         return super(AnnouncementViewset, self).list(request, *args, **kwargs)
 

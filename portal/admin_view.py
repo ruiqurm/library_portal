@@ -11,8 +11,34 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.exceptions import ValidationError
 from django_filters import rest_framework as filters
 from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView as _TokenObtainPairView,
+    TokenRefreshView as _TokenRefreshView,
+    TokenVerifyView as _TokenVerifyView
+)
+class TokenObtainPairView(_TokenObtainPairView):
+    """
+    获取一个token
+    需要username 和 password
+    返回一个token和一个refresh。后者用来刷新
 
+    使用时，在header上设置{Authorization:Bearer [token]}
+    """
+    pass
+class TokenRefreshView(_TokenRefreshView):
+    """
+    刷新token。
 
+    需要提供refresh token.
+
+    返回一组新的token
+    """
+    pass
+class TokenVerifyView(_TokenVerifyView):
+    """
+    校验token
+    """
+    pass
 class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
@@ -59,6 +85,10 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
     def create(self, request, *args, **kwargs):
         """
         创建一个用户
+        需要的字段：username,password
+
+        密码最小长度为8，最大长度为128
+        目前只能由管理员创建。
         """
         data = dict(request.data)
         data["is_stuff"] = True
@@ -73,11 +103,14 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
     def change_password(self, request, *args, **kwargs):
         """
         修改密码
+        密码最小长度为8，最大长度为128
         """
         user: MyUser = request.user
         password = str(request.data.get("password"))
         if len(password) > 128:
             raise ValidationError("密码太长")
+        elif len(password) < 8 :
+            raise ValidationError("密码太短")
         user.password = make_password(password)
         user.save()
         return Response()
@@ -101,6 +134,8 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
     def edit(self, request, *args, **kwargs):
         """
         更新用户自己的信息
+        不能改密码。
+        图片还没试过
         """
         user: MyUser = request.user
         data = dict(request.data)
@@ -125,7 +160,7 @@ class DatabaseSubjectAdminViewset(ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-Databasesubject'],
     )
 
 class DatabaseSourceAdminViewset(ModelViewSet):
@@ -136,7 +171,7 @@ class DatabaseSourceAdminViewset(ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-DatabaseSource'],
     )
 
 class DatabaseCategoryAdminViewset(ModelViewSet):
@@ -147,18 +182,18 @@ class DatabaseCategoryAdminViewset(ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-DatabaseCategory'],
     )
 
 class DatabaseAdminViewset(ModelViewSet):
     queryset = Database.objects.all()
-    serializer_class = DatabaseSerializer
+    serializer_class = DatabaseAdminSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-Database'],
     )
 
 class DatabaseVisitAdminViewset(ModelViewSet):
@@ -169,7 +204,7 @@ class DatabaseVisitAdminViewset(ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-DatabaseVisit'],
     )
 
 class FeedbackAdminViewset(ModelViewSet):
@@ -180,18 +215,19 @@ class FeedbackAdminViewset(ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-Feedback'],
     )
 
 class AnnouncementAdminViewset(ModelViewSet):
     queryset = Announcement.objects.all()
-    serializer_class = AnnouncementSerializer
+    serializer_class = AnnouncementAdminSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-Announcement'],
+        operation_id_base='announcementAdmin',
     )
 
 class AnnouncementVisitAdminViewset(ModelViewSet):
@@ -202,5 +238,5 @@ class AnnouncementVisitAdminViewset(ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
-        tags=['Admin'],
+        tags=['Admin-AnnouncementVisit'],
     )

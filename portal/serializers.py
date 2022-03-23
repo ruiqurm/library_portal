@@ -41,7 +41,7 @@ class DatabaseSerializer(serializers.ModelSerializer):
     publisher = MyUserSerializer()
     category = DatabaseCategorySerializer()
     source = DatabaseSourceSerializer()
-    subject = DatabaseSubjectSerializer()
+    subject = DatabaseSubjectSerializer(many=True)
     class Meta:
         model = Database
         fields = "__all__"
@@ -91,7 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("id","username","is_superuser","first_name","last_name","email","is_active","avatar")
 
 class UserCreateSerializer(serializers.ModelSerializer):
-
+    password = serializers.CharField(max_length=128,min_length=8)
     class Meta:
         model = MyUser
         fields = ("username","password",)
@@ -100,4 +100,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
         self.validated_data["password"] = make_password(self.validated_data["password"])
         return super(UserCreateSerializer,self).save(**kwargs)
 
-
+class AnnouncementAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Announcement
+        fields = "__all__"
+class DatabaseAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Database
+        fields = "__all__"

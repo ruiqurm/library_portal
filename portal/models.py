@@ -59,7 +59,7 @@ class Database(models.Model):
     en_name = models.TextField(verbose_name="资源英文名称")
     category = models.ForeignKey(DatabaseCategory, verbose_name="类别", on_delete=models.SET_NULL, null=True)
     source = models.ForeignKey(DatabaseSource, verbose_name="来源", on_delete=models.SET_NULL, null=True)
-    subject = models.ManyToManyField(DatabaseSubject, verbose_name="学科", null=True)
+    subject = models.ManyToManyField(DatabaseSubject, verbose_name="学科")
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     update_time = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     # visits = models.IntegerField(verbose_name="总访问量", default=0)
@@ -68,8 +68,8 @@ class Database(models.Model):
     is_available = models.BooleanField(verbose_name="是否可见")
     is_on_trial = models.BooleanField(verbose_name="是否在试用期")
     on_trial = models.DateTimeField(verbose_name="试用期", blank=True, null=True)
-    cn_content = HTMLField(verbose_name="中文内容")
-    en_content = HTMLField(verbose_name="英文内容")
+    cn_content = HTMLField(verbose_name="中文内容",blank=True)
+    en_content = HTMLField(verbose_name="英文内容",blank=True)
 
     class Meta:
         verbose_name = "数据库"
@@ -116,8 +116,8 @@ class Announcement(models.Model):
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     update_time = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     # visits = models.IntegerField(verbose_name="访问量", default=0)
-    cn_content = HTMLField(verbose_name="中文内容")
-    en_content = HTMLField(verbose_name="英文内容")
+    cn_content = HTMLField(verbose_name="中文内容",blank=True)
+    en_content = HTMLField(verbose_name="英文内容",blank=True)
     database = models.ForeignKey(Database, verbose_name="关联数据库", on_delete=models.CASCADE, null=True, blank=True)
     is_available = models.BooleanField(verbose_name="是否有效")
 
