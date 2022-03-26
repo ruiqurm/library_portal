@@ -136,10 +136,14 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         更新用户自己的信息
         不能改密码。
         图片还没试过
+        对`is_superuser`,`username`,`password`,`is_active`的修改无效
         """
         user: MyUser = request.user
         data = dict(request.data)
         data.pop("password", None)
+        data.pop("username", None)
+        data.pop("is_active", None)
+        data.pop("is_superuser", None)
         serializer = self.get_serializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
