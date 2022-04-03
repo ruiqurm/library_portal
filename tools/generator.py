@@ -160,18 +160,18 @@ user = MyUser.objects.get(username="temp")
 # DatabaseSubject
 DatabaseSubject.objects.all().delete()
 DatabaseSubject.objects.bulk_create(
-    [DatabaseSubject(cn_name=cn, en_name=en) for cn, en in subject]
+    [DatabaseSubject(name=en) for cn, en in subject]
 )
 
 # DatabaseSource
 DatabaseSource.objects.all().delete()
 DatabaseSource.objects.bulk_create(
-    [DatabaseSource(cn_name=cn, en_name=en) for cn, en in source]
+    [DatabaseSource(name=en) for cn, en in source]
 )
 
 DatabaseCategory.objects.all().delete()
 DatabaseCategory.objects.bulk_create(
-    [DatabaseCategory(cn_name=cn, en_name=en) for cn, en in category]
+    [DatabaseCategory(name=en) for cn, en in category]
 )
 
 """
@@ -188,7 +188,6 @@ import tqdm
 save_result = []
 name_to_subject = {}
 for name in tqdm.tqdm(database):
-    cn_name = name
     en_name = " ".join(lazy_pinyin(name))
     category_id = random.choice(category_ids)
     source_id = random.choice(source_ids)
@@ -197,10 +196,10 @@ for name in tqdm.tqdm(database):
     is_on_trial = random.choice([True, False])
     on_trial = random_date(datetime.datetime.today(),
                            datetime.datetime.now() + datetime.timedelta(days=365 * 2)) if is_on_trial else None
-    d = Database(cn_name=cn_name, en_name=en_name, category_id=category_id, source_id=source_id, publisher=user,
-                 is_Chinese=is_chinse, is_on_trial=is_on_trial, on_trial=on_trial, cn_content=cn_name,
-                 en_content=en_name, is_available=True)
-    name_to_subject[cn_name] = subjectids
+    d = Database(name=en_name, category_id=category_id, source_id=source_id, publisher=user,
+                 is_Chinese=is_chinse, is_on_trial=is_on_trial, on_trial=on_trial,
+                 content=en_name, is_available=True)
+    name_to_subject[en_name] = subjectids
     save_result.append(d)
 Database.objects.bulk_create(
     save_result
@@ -208,7 +207,7 @@ Database.objects.bulk_create(
 ThroughModel = Database.subject.through
 subject_middle_result = []
 for i in save_result:
-    for j in name_to_subject[i.cn_name]:
+    for j in name_to_subject[i.name]:
         subject_middle_result.append(ThroughModel(database_id=i.id, databasesubject_id=j))
 ThroughModel.objects.bulk_create(
     subject_middle_result
@@ -236,11 +235,9 @@ for i in tqdm.tqdm(range(100)):
     connect_to_database = random.randint(0, 7) <= 1
     database_key = random.choice(database_ids) if connect_to_database else None
     save_result.append(Announcement(
-        cn_title=f"公告{i}",
-        en_title=f"announcement{i}",
+        title=f"announcement{i}",
         publisher=user,
-        cn_content=common_announcement_content,
-        en_content=common_announcement_content_en,
+        content=common_announcement_content_en,
         database_id=database_key,
         is_available=True
     ))

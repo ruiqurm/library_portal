@@ -27,7 +27,7 @@ class DatabaseGeneralSerializer(serializers.ModelSerializer):
     subject = DatabaseSubjectSerializer(many=True)
     class Meta:
         model = Database
-        exclude = ('cn_content', 'en_content')
+        exclude = ('content',)
 
     def to_representation(self, instance:Database):
         """

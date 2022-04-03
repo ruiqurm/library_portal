@@ -15,48 +15,44 @@ class MyUser(AbstractUser):
 
 
 class DatabaseSubject(models.Model):
-    cn_name = models.CharField(max_length=128, verbose_name="中文名称")
-    en_name = models.CharField(max_length=128, verbose_name="英文名称")
+    name = models.CharField(max_length=128, verbose_name="名称")
 
     class Meta:
         verbose_name = "数据库学科"
         verbose_name_plural = verbose_name
-        unique_together = ("cn_name","en_name")
+        unique_together = ("name",)
 
     def __str__(self):
-        return f"{self.cn_name}  {self.en_name}"
+        return f"{self.name}"
 
 
 class DatabaseSource(models.Model):
-    cn_name = models.CharField(max_length=128, verbose_name="中文名称")
-    en_name = models.CharField(max_length=128, verbose_name="英文名称")
+    name = models.CharField(max_length=128, verbose_name="名称")
 
     class Meta:
         verbose_name = "数据库来源"
         verbose_name_plural = verbose_name
-        unique_together = ("cn_name","en_name")
+        unique_together = ("name",)
 
     def __str__(self):
-        return f"{self.cn_name}  {self.en_name}"
+        return f"{self.name}"
 
 
 class DatabaseCategory(models.Model):
-    cn_name = models.CharField(max_length=128, verbose_name="中文名称")
-    en_name = models.CharField(max_length=128, verbose_name="英文名称")
+    name = models.CharField(max_length=128, verbose_name="名称")
 
     class Meta:
         verbose_name = "数据库分类"
         verbose_name_plural = verbose_name
-        unique_together = ("cn_name","en_name")
+        unique_together = ("name",)
 
     def __str__(self):
-        return f"{self.cn_name}  {self.en_name}"
+        return f"{self.name}"
 
 
 class Database(models.Model):
     id = models.AutoField(primary_key=True)
-    cn_name = models.TextField(verbose_name="资源中文名称")
-    en_name = models.TextField(verbose_name="资源英文名称")
+    name = models.TextField(verbose_name="资源名称")
     category = models.ForeignKey(DatabaseCategory, verbose_name="类别", on_delete=models.SET_NULL, null=True)
     source = models.ForeignKey(DatabaseSource, verbose_name="来源", on_delete=models.SET_NULL, null=True)
     subject = models.ManyToManyField(DatabaseSubject, verbose_name="学科")
@@ -68,17 +64,16 @@ class Database(models.Model):
     is_available = models.BooleanField(verbose_name="是否可见")
     is_on_trial = models.BooleanField(verbose_name="是否在试用期")
     on_trial = models.DateTimeField(verbose_name="试用期", blank=True, null=True)
-    cn_content = HTMLField(verbose_name="中文内容",blank=True)
-    en_content = HTMLField(verbose_name="英文内容",blank=True)
+    content = HTMLField(verbose_name="内容",blank=True)
 
     class Meta:
         verbose_name = "数据库"
         verbose_name_plural = verbose_name
         ordering = ['-update_time', '-create_time']
-        unique_together = ("cn_name","en_name")
+        unique_together = ("name",)
 
     def __str__(self):
-        return f"{self.cn_name}  {self.en_name}"
+        return f"{self.name} "
 
 
 class DatabaseVisit(models.Model):
@@ -91,7 +86,7 @@ class DatabaseVisit(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return f"[{self.date.strftime('%Y-%m-%d, %H:%M:%S')}]{self.ip} 访问{self.database.cn_name}  {self.database.cn_name}"
+        return f"[{self.date.strftime('%Y-%m-%d, %H:%M:%S')}]{self.ip} 访问{self.database.name}"
 
 
 class Feedback(models.Model):
@@ -110,14 +105,12 @@ class Feedback(models.Model):
 
 
 class Announcement(models.Model):
-    cn_title = models.TextField(verbose_name="中文标题")
-    en_title = models.TextField(verbose_name="英文标题")
+    title = models.TextField(verbose_name="标题")
     publisher = models.ForeignKey(MyUser, verbose_name="发布者", null=True, on_delete=models.SET_NULL)
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     update_time = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     # visits = models.IntegerField(verbose_name="访问量", default=0)
-    cn_content = HTMLField(verbose_name="中文内容",blank=True)
-    en_content = HTMLField(verbose_name="英文内容",blank=True)
+    content = HTMLField(verbose_name="内容",blank=True)
     database = models.ForeignKey(Database, verbose_name="关联数据库", on_delete=models.CASCADE, null=True, blank=True)
     is_available = models.BooleanField(verbose_name="是否有效")
 
@@ -127,7 +120,7 @@ class Announcement(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return f"[{self.publisher.username} {self.cn_title}"
+        return f"[{self.publisher.username} {self.title}"
 
 
 class AnnouncementVisit(models.Model):

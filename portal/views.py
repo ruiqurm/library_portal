@@ -15,21 +15,16 @@ from rest_framework.schemas.openapi import AutoSchema
 
 
 class DatabaseListFilter(filters.FilterSet):
-    cn_category = filters.CharFilter(field_name="category__cn_name", lookup_expr="iexact", label="分类名（中文）")
-    cn_source = filters.CharFilter(field_name="source__cn_name", lookup_expr="iexact", label="来源（中文）")
-    cn_subject = filters.CharFilter(field_name="subject__cn_name", lookup_expr='iexact', label="学科（中文）")
-    en_category = filters.CharFilter(field_name="category__en_name", lookup_expr="iexact", label="分类名（英文）")
-    en_source = filters.CharFilter(field_name="source__en_name", lookup_expr="iexact", label="来源（英文）")
-    en_subject = filters.CharFilter(field_name="subject__en_name", lookup_expr='iexact', label="学科（英文）")
+    category = filters.CharFilter(field_name="category__name", lookup_expr="iexact", label="分类名")
+    source = filters.CharFilter(field_name="source__name", lookup_expr="iexact", label="来源")
+    subject = filters.CharFilter(field_name="subject__name", lookup_expr='iexact', label="学科")
     first_letter = filters.CharFilter(method="filter_by_first_letter", label='第一个字母')
-    cn_name = filters.CharFilter(field_name="cn_name",lookup_expr='icontains', label='中文标题')
-    en_name = filters.CharFilter(field_name="en_name",lookup_expr='icontains', label='英文标题')
-    cn_content = filters.CharFilter(field_name="cn_content",lookup_expr='icontains', label='中文内容')
-    en_content = filters.CharFilter(field_name="en_content",lookup_expr='icontains', label='英文内容')
+    name = filters.CharFilter(field_name="name",lookup_expr='icontains', label='标题')
+    content = filters.CharFilter(field_name="content",lookup_expr='icontains', label='内容')
 
     def filter_by_first_letter(self, queryset, name, value, *args, **kwargs):
         if len(value) == 1 and value.isalpha():
-            return queryset.filter(en_name__istartswith=value)
+            return queryset.filter(name__istartswith=value)
         else:
             return queryset
 
@@ -86,8 +81,8 @@ class DatabaseListViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin):
         # if key is None:
         #     return Response({})
         results = queryset.filter(
-            Q(cn_name__icontains=key) | Q(en_name__icontains=key) | Q(en_content__icontains=key) | Q(
-                cn_content__icontains=key)).all()
+            Q(name__icontains=key) | Q(name__icontains=key) | Q(content__icontains=key) | Q(
+                content__icontains=key)).all()
         return Response(DatabaseGeneralSerializer(results, many=True).data)
 
 
@@ -196,8 +191,8 @@ class AnnouncementViewset(GenericViewSet, ListModelMixin):
         queryset = self.filter_queryset(self.get_queryset())
         key = request.query_params.get("key", "")
         results = queryset.filter(
-            Q(cn_title__icontains=key) | Q(en_title__icontains=key) | Q(en_content__icontains=key) | Q(
-                cn_content__icontains=key)).all()
+            Q(title__icontains=key) | Q(title__icontains=key) | Q(content__icontains=key) | Q(
+                content__icontains=key)).all()
         return Response(AnnouncementSerializer(results, many=True).data)
 
 
