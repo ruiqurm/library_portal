@@ -146,12 +146,19 @@ class FeedbackView(APIView):
 class AnnouncementFilter(filters.FilterSet):
     has_database = filters.CharFilter(method='_has_database',label="是否关联数据库")
     database_id = filters.CharFilter(method='_database_id',label="数据库id")
-
+    search = filters.CharFilter(method='_search',label="搜索数据库")
     def _has_database(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
         if value.lower() == "true":
             return queryset.filter(database__isnull=False)
         elif value.lower() == "false":
             return queryset.filter(database__isnull=True)
+        else:
+            return queryset
+    def _search(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
+        if value is not None and value != "":
+            return queryset.filter(
+                 Q(title__icontains=value) | Q(title__icontains=value) | Q(content__icontains=value) | Q(
+                    content__icontains=value)).all()
         else:
             return queryset
     def _database_id(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
@@ -188,12 +195,7 @@ class AnnouncementViewset(GenericViewSet, ListModelMixin):
         """
         搜索公告。搜中英文内容和标题。
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        key = request.query_params.get("key", "")
-        results = queryset.filter(
-            Q(title__icontains=key) | Q(title__icontains=key) | Q(content__icontains=key) | Q(
-                content__icontains=key)).all()
-        return Response(AnnouncementSerializer(results, many=True).data)
+
 
 
 class AnnouncementRetrieveViewset(GenericViewSet, RetrieveModelMixin):
