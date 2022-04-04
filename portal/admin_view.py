@@ -1,21 +1,23 @@
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
-from .models import *
-from .serializers import *
-from rest_framework.schemas.openapi import AutoSchema
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.exceptions import ValidationError
 from django_filters import rest_framework as filters
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.schemas.openapi import AutoSchema
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import (
     TokenObtainPairView as _TokenObtainPairView,
     TokenRefreshView as _TokenRefreshView,
     TokenVerifyView as _TokenVerifyView
 )
+
+from .serializers import *
+
+
 class TokenObtainPairView(_TokenObtainPairView):
     """
     获取一个token
@@ -25,6 +27,8 @@ class TokenObtainPairView(_TokenObtainPairView):
     使用时，在header上设置{Authorization:Bearer [token]}
     """
     pass
+
+
 class TokenRefreshView(_TokenRefreshView):
     """
     刷新token。
@@ -34,11 +38,15 @@ class TokenRefreshView(_TokenRefreshView):
     返回一组新的token
     """
     pass
+
+
 class TokenVerifyView(_TokenVerifyView):
     """
     校验token
     """
     pass
+
+
 class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
@@ -109,7 +117,7 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         password = str(request.data.get("password"))
         if len(password) > 128:
             raise ValidationError("密码太长")
-        elif len(password) < 8 :
+        elif len(password) < 8:
             raise ValidationError("密码太短")
         user.password = make_password(password)
         user.save()
@@ -167,6 +175,7 @@ class DatabaseSubjectAdminViewset(ModelViewSet):
         tags=['Admin-Databasesubject'],
     )
 
+
 class DatabaseSourceAdminViewset(ModelViewSet):
     queryset = DatabaseSource.objects.all()
     serializer_class = DatabaseSourceSerializer
@@ -177,6 +186,7 @@ class DatabaseSourceAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-DatabaseSource'],
     )
+
 
 class DatabaseCategoryAdminViewset(ModelViewSet):
     queryset = DatabaseCategory.objects.all()
@@ -189,6 +199,7 @@ class DatabaseCategoryAdminViewset(ModelViewSet):
         tags=['Admin-DatabaseCategory'],
     )
 
+
 class DatabaseAdminViewset(ModelViewSet):
     queryset = Database.objects.all()
     serializer_class = DatabaseAdminSerializer
@@ -199,6 +210,7 @@ class DatabaseAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-Database'],
     )
+
 
 class DatabaseVisitAdminViewset(ModelViewSet):
     queryset = DatabaseVisit.objects.all()
@@ -211,6 +223,7 @@ class DatabaseVisitAdminViewset(ModelViewSet):
         tags=['Admin-DatabaseVisit'],
     )
 
+
 class FeedbackAdminViewset(ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
@@ -221,6 +234,7 @@ class FeedbackAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-Feedback'],
     )
+
 
 class AnnouncementAdminViewset(ModelViewSet):
     queryset = Announcement.objects.all()
@@ -234,6 +248,7 @@ class AnnouncementAdminViewset(ModelViewSet):
         operation_id_base='announcementAdmin',
     )
 
+
 class AnnouncementVisitAdminViewset(ModelViewSet):
     queryset = AnnouncementVisit.objects.all()
     serializer_class = AnnouncementVisitSerializer
@@ -244,3 +259,8 @@ class AnnouncementVisitAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-AnnouncementVisit'],
     )
+
+
+class UploadView(APIView):
+    def post(self):
+        pass

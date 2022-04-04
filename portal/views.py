@@ -1,17 +1,16 @@
-from django.shortcuts import render
-from rest_framework import viewsets
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
-from .models import *
-from .serializers import *
-from rest_framework.decorators import action, api_view
-from django_filters import rest_framework as filters
 from django.db.models import Q
+from django_filters import rest_framework as filters
+from rest_framework.decorators import action
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.schemas.openapi import AutoSchema
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
+from datetime import date
+
+from .serializers import *
 
 
 class DatabaseListFilter(filters.FilterSet):
@@ -19,8 +18,8 @@ class DatabaseListFilter(filters.FilterSet):
     source = filters.CharFilter(field_name="source__name", lookup_expr="iexact", label="来源")
     subject = filters.CharFilter(field_name="subject__name", lookup_expr='iexact', label="学科")
     first_letter = filters.CharFilter(method="filter_by_first_letter", label='第一个字母')
-    name = filters.CharFilter(field_name="name",lookup_expr='icontains', label='标题')
-    content = filters.CharFilter(field_name="content",lookup_expr='icontains', label='内容')
+    name = filters.CharFilter(field_name="name", lookup_expr='icontains', label='标题')
+    content = filters.CharFilter(field_name="content", lookup_expr='icontains', label='内容')
 
     def filter_by_first_letter(self, queryset, name, value, *args, **kwargs):
         if len(value) == 1 and value.isalpha():
@@ -94,6 +93,7 @@ class DatabaseRetrieveViewset(GenericViewSet, RetrieveModelMixin):
         tags=['Database'],
         operation_id_base='databaseRetrieve',
     )
+
     def retrieve(self, request, *args, **kwargs):
         """
         获取数据库id=?的详情
@@ -118,13 +118,14 @@ class DatabaseRetrieveViewset(GenericViewSet, RetrieveModelMixin):
         return Response()
 
 
-from datetime import date
+
 
 class FeedbackView(APIView):
     schema = AutoSchema(
         tags=['Feedback'],
         operation_id_base='FeedbackCreate',
     )
+
     def post(request: Request):
         """
         新建一个反馈
@@ -135,7 +136,8 @@ class FeedbackView(APIView):
         ip = request.META.get("REMOTE_ADDR")
         data["ip"] = ip
         today = date.today()
-        if Feedback.objects.filter(create_time__year=today.year, create_time__month=today.month, create_time__day=today.day,
+        if Feedback.objects.filter(create_time__year=today.year, create_time__month=today.month,
+                                   create_time__day=today.day,
                                    ip=ip).count() > 2:
             return Response({"msg": "You can feedback at largest 3 times a day"}, status=403)
         save_data = FeedbackSerializer(data=data)
@@ -143,25 +145,29 @@ class FeedbackView(APIView):
         save_data.save()
         return Response(save_data.data, status=201)
 
+
 class AnnouncementFilter(filters.FilterSet):
-    has_database = filters.CharFilter(method='_has_database',label="是否关联数据库")
-    database_id = filters.CharFilter(method='_database_id',label="数据库id")
-    search = filters.CharFilter(method='_search',label="搜索数据库")
-    def _has_database(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
+    has_database = filters.CharFilter(method='_has_database', label="是否关联数据库")
+    database_id = filters.CharFilter(method='_database_id', label="数据库id")
+    search = filters.CharFilter(method='_search', label="搜索数据库")
+
+    def _has_database(self, queryset: Announcement.objects.all(), name, value: str, *args, **kwargs):
         if value.lower() == "true":
             return queryset.filter(database__isnull=False)
         elif value.lower() == "false":
             return queryset.filter(database__isnull=True)
         else:
             return queryset
-    def _search(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
+
+    def _search(self, queryset: Announcement.objects.all(), name, value: str, *args, **kwargs):
         if value is not None and value != "":
             return queryset.filter(
-                 Q(title__icontains=value) | Q(title__icontains=value) | Q(content__icontains=value) | Q(
+                Q(title__icontains=value) | Q(title__icontains=value) | Q(content__icontains=value) | Q(
                     content__icontains=value)).all()
         else:
             return queryset
-    def _database_id(self, queryset: Announcement.objects.all(), name, value:str, *args, **kwargs):
+
+    def _database_id(self, queryset: Announcement.objects.all(), name, value: str, *args, **kwargs):
         if value.isdigit():
             return queryset.filter(database_id=value)
         else:
@@ -189,13 +195,11 @@ class AnnouncementViewset(GenericViewSet, ListModelMixin):
         """
         return super(AnnouncementViewset, self).list(request, *args, **kwargs)
 
-
     @action(methods=["GET"], detail=False, url_path="search")
     def search_announcement(self, request, *args, **kwarg):
         """
         搜索公告。搜中英文内容和标题。
         """
-
 
 
 class AnnouncementRetrieveViewset(GenericViewSet, RetrieveModelMixin):
@@ -205,6 +209,7 @@ class AnnouncementRetrieveViewset(GenericViewSet, RetrieveModelMixin):
     schema = AutoSchema(
         tags=['Announcement'],
     )
+
     def retrieve(self, request, *args, **kwargs):
         """
         获取id=?的公告

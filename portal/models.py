@@ -1,11 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from tinymce.models import HTMLField
-
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 """
 用户拓展
 """
 
+
+class File(models.Model):
+    file = models.FileField(upload_to="static/files")
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    def __str__(self):
+        return self.file.name
 
 class MyUser(AbstractUser):
     avatar = models.ImageField(verbose_name="头像", null=True)
@@ -64,7 +72,7 @@ class Database(models.Model):
     is_available = models.BooleanField(verbose_name="是否可见")
     is_on_trial = models.BooleanField(verbose_name="是否在试用期")
     on_trial = models.DateTimeField(verbose_name="试用期", blank=True, null=True)
-    content = HTMLField(verbose_name="内容",blank=True)
+    content = models.TextField(verbose_name="内容", blank=True)
 
     class Meta:
         verbose_name = "数据库"
@@ -109,8 +117,7 @@ class Announcement(models.Model):
     publisher = models.ForeignKey(MyUser, verbose_name="发布者", null=True, on_delete=models.SET_NULL)
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     update_time = models.DateTimeField(verbose_name="更新时间", auto_now=True)
-    # visits = models.IntegerField(verbose_name="访问量", default=0)
-    content = HTMLField(verbose_name="内容",blank=True)
+    content = models.TextField(verbose_name="内容",blank=True)
     database = models.ForeignKey(Database, verbose_name="关联数据库", on_delete=models.CASCADE, null=True, blank=True)
     is_available = models.BooleanField(verbose_name="是否有效")
 
