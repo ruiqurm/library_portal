@@ -168,7 +168,7 @@ class UploadSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     obj = serializers.ChoiceField(("db", "an",))
     def validate(self, data):
-        if data["size"] > self.MAX_SIZE:
+        if data["file"].size > self.MAX_SIZE:
             raise ValidationError(f"size too big(limit {self.MAX_SIZE} Byte)")
         return data
     def to_representation(self, instance:Union[File,Image]):
