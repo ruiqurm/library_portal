@@ -128,19 +128,13 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         serializer = self.serializer_class(user)
         return Response(serializer.data)
 
-    # @action(methods=["POST"], detail=False, url_path="edit",permission_classes=(IsAuthenticated,))
-    # def upload_avatar(self,request,*args,**kwargs):
-    #     """
-    #     上传头像
-    #     """
-    #     pass
     @action(methods=["POST"], detail=False, url_path="edit", permission_classes=(IsAuthenticated,))
     def edit(self, request, *args, **kwargs):
         """
         更新用户自己的信息
         不能改密码。
-        图片还没试过
         对`is_superuser`,`username`,`password`,`is_active`的修改无效
+        `头像`大小小于4MB
         """
         user: MyUser = request.user
         data = dict(request.data)
@@ -148,7 +142,9 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         data.pop("username", None)
         data.pop("is_active", None)
         data.pop("is_superuser", None)
-        serializer = self.get_serializer(user, data=request.data, partial=True)
+        if "avatar" in data:
+            data["avatar"] = data["avatar"][0]
+        serializer = self.get_serializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 

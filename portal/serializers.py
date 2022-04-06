@@ -1,6 +1,11 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from .models import *
 from django.contrib.auth.hashers import make_password
+
+"""
+Custome validator
+"""
 
 
 class MyUserSerializer(serializers.ModelSerializer):
@@ -105,9 +110,19 @@ class AnnouncementVisitSerializer(serializers.ModelSerializer):
 For admin
 """
 
-
 class UserSerializer(serializers.ModelSerializer):
-    avatar = serializers.ImageField(read_only=True)
+    MAX_AVATAR_SIZE = 4194304 # 4MB
+    avatar = serializers.ImageField()
+
+    def validate_avatar(self, image):
+        if image.size > self.MAX_AVATAR_SIZE:
+            raise ValidationError("File size too big(limit 4MB)")
+
+    def to_representation(self, instance):
+        response = super(UserSerializer, self).to_representation(instance)
+        if instance.avatar:
+            response['avatar'] = instance.avatar.url
+        return response
 
     class Meta:
         model = MyUser
@@ -136,3 +151,7 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Database
         fields = "__all__"
+
+
+class UploadFileSerializer(serializers.ModelSerializer):
+    file = serializers.FileField()
