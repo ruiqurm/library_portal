@@ -12,6 +12,10 @@ admin.site.register(DatabaseVisit)
 admin.site.register(Feedback)
 admin.site.register(Announcement)
 admin.site.register(AnnouncementVisit)
+admin.site.register(MyUser)
+admin.site.register(File)
+admin.site.register(Image)
+
 #
 # def validate_password_strength(value):
 #     """Validates that a password is as least 8 characters long and has at least
@@ -84,6 +88,6 @@ admin.site.register(AnnouncementVisit)
 #     # filter_horizontal = ()
 #
 # # Now register the new UserAdmin...
-admin.site.register(MyUser)
+
 #
 # admin.site.unregister(Group)
