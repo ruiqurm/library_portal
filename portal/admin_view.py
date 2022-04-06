@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -5,6 +6,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
@@ -14,7 +16,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView as _TokenRefreshView,
     TokenVerifyView as _TokenVerifyView
 )
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from .serializers import *
 
 
@@ -40,13 +42,6 @@ class TokenRefreshView(_TokenRefreshView):
     pass
 
 
-class TokenVerifyView(_TokenVerifyView):
-    """
-    校验token
-    """
-    pass
-
-
 class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
@@ -56,6 +51,7 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         'is_active',
         "username",
     )
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
@@ -169,6 +165,7 @@ class DatabaseSubjectAdminViewset(ModelViewSet):
     serializer_class = DatabaseSubjectSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
@@ -181,6 +178,7 @@ class DatabaseSourceAdminViewset(ModelViewSet):
     serializer_class = DatabaseSourceSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
@@ -194,6 +192,7 @@ class DatabaseCategoryAdminViewset(ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
     pagination_class = LimitOffsetPagination
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
         tags=['Admin-DatabaseCategory'],
@@ -205,6 +204,7 @@ class DatabaseAdminViewset(ModelViewSet):
     serializer_class = DatabaseAdminSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
@@ -217,6 +217,7 @@ class DatabaseVisitAdminViewset(ModelViewSet):
     serializer_class = DatabaseVisitSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
@@ -229,6 +230,7 @@ class FeedbackAdminViewset(ModelViewSet):
     serializer_class = FeedbackSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
@@ -241,6 +243,7 @@ class AnnouncementAdminViewset(ModelViewSet):
     serializer_class = AnnouncementAdminSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
@@ -254,13 +257,18 @@ class AnnouncementVisitAdminViewset(ModelViewSet):
     serializer_class = AnnouncementVisitSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = "__all__"
+    authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
     schema = AutoSchema(
         tags=['Admin-AnnouncementVisit'],
     )
 
+from rest_framework.parsers import MultiPartParser,FormParser
 
 class UploadView(APIView):
-    def post(self):
+    parser_classes = (MultiPartParser, FormParser)
+    def post(self,request:Request, format=None):
+        file: InMemoryUploadedFile = request.FILES['file']
+
         pass

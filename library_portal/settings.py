@@ -134,14 +134,11 @@ mimetypes.add_type("text/javascript", ".js", True)
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 20,
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
 }
 from datetime import timedelta
 SIMPLE_JWT = {
-'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
-'REFRESH_TOKEN_LIFETIME': timedelta(minutes=1),
+'ACCESS_TOKEN_LIFETIME': timedelta(hours=3),
+'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # 7天内不登录，需要重新输入密码
 'UPDATE_LAST_LOGIN': True,
 'ALGORITHM': 'HS256',
 'SIGNING_KEY': SECRET_KEY,
