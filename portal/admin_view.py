@@ -1,3 +1,5 @@
+import os
+
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
@@ -142,7 +144,7 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         data.pop("username", None)
         data.pop("is_active", None)
         data.pop("is_superuser", None)
-        if "avatar" in data:
+        if "avatar" in data and isinstance(data["avatar"],list):
             data["avatar"] = data["avatar"][0]
         serializer = self.get_serializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -264,7 +266,53 @@ from rest_framework.parsers import MultiPartParser,FormParser
 
 class UploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
-    def post(self,request:Request, format=None):
-        file: InMemoryUploadedFile = request.FILES['file']
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    schema = AutoSchema(
+        tags=['Admin-Upload'],
+    )
+    def post(self,request:Request):
+        """
+        需要提供class,id和文件
+        obj : `db` 或者 `an`
+        id : 对应的数据库或者公告id
+        file: 文件。对于图片，大小不超过20M，文件大小不超过50M
+        type: `img`,`file`
+        """
+        if request.data:
+            if "type" not in request.data:
+                raise ValidationError("缺少type")
+            if request.data["type"] == "img":
+                serializer = UploadImageSerializer(data=request.data)
+            elif request.data["type"] == "file":
+                serializer = UploadFileSerializer(data=request.data)
+            else:
+                raise ValidationError("Unknow type")
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            raise ValidationError("Not supported")
 
-        pass
+class ImageManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin,DestroyModelMixin):
+    queryset = Image.objects.all()
+    serializer_class = FileSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_fields = ("content_type","object_id")
+    authentication_classes = (JWTAuthentication,)
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminUser,)
+    schema = AutoSchema(
+        tags=['Admin-Upload'],
+    )
+class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin,DestroyModelMixin):
+    queryset = File.objects.all()
+    serializer_class = FileSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_fields = ("content_type","object_id")
+    authentication_classes = (JWTAuthentication,)
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminUser,)
+    schema = AutoSchema(
+        tags=['Admin-Upload'],
+    )

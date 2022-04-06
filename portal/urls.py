@@ -18,6 +18,10 @@ router.register(r'admin/databaseVist',DatabaseVisitAdminViewset)
 router.register(r'admin/feedback',FeedbackAdminViewset)
 router.register(r'admin/announcement',AnnouncementAdminViewset)
 router.register(r'admin/announcementVisit',AnnouncementVisitAdminViewset)
+router.register(r'admin/media/image',ImageManagement)
+router.register(r'admin/media/file',FileManagement)
+
+# router.register(r'admin/media/file',File)
 
 # The API URLs are now determined automatically by the router.
 urlpatterns = [
@@ -25,4 +29,5 @@ urlpatterns = [
     path('feedback',FeedbackView.as_view()),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('admin/upload/',UploadView.as_view())
 ]
