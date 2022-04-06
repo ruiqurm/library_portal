@@ -128,7 +128,7 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         serializer = self.serializer_class(user)
         return Response(serializer.data)
 
-    @action(methods=["POST"], detail=False, url_path="edit", permission_classes=(IsAuthenticated,))
+    @action(methods=["POST","UPDATE"], detail=False, url_path="edit", permission_classes=(IsAuthenticated,))
     def edit(self, request, *args, **kwargs):
         """
         更新用户自己的信息

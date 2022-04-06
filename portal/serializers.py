@@ -117,7 +117,7 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_avatar(self, image):
         if image.size > self.MAX_AVATAR_SIZE:
             raise ValidationError("File size too big(limit 4MB)")
-
+        return image
     def to_representation(self, instance):
         response = super(UserSerializer, self).to_representation(instance)
         if instance.avatar:
