@@ -9,11 +9,11 @@ import os
 用户拓展
 """
 
-
 if not os.path.exists("media"):
     from pathlib import Path
 
     Path("media").mkdir(parents=True, exist_ok=True)
+
 
 def rename_file(instance, filename):
     # upload_to = 'media'
@@ -21,24 +21,26 @@ def rename_file(instance, filename):
     filename = '{}.{}'.format(uuid4().hex, ext)
     return filename
 
+
 class File(models.Model):
-    file = models.FileField(upload_to=rename_file)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    file = models.FileField(upload_to=rename_file, verbose_name="文件")
+    type = models.CharField(choices=(("image","图片"), ("file","文件")), verbose_name="类型",max_length=8)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,blank=True, null=True)
+    object_id = models.PositiveIntegerField(blank=True, null=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
         return self.file.name
 
 
-class Image(models.Model):
-    file = models.ImageField(upload_to=rename_file)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    def __str__(self):
-        return self.file.name
+# class Image(models.Model):
+#     file = models.ImageField(upload_to=rename_file)
+#     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+#     object_id = models.PositiveIntegerField()
+#     content_object = GenericForeignKey('content_type', 'object_id')
+#
+#     def __str__(self):
+#         return self.file.name
 
 
 class MyUser(AbstractUser):
@@ -87,9 +89,9 @@ class DatabaseCategory(models.Model):
 class Database(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.TextField(verbose_name="资源名称")
-    category = models.ForeignKey(DatabaseCategory, verbose_name="类别", on_delete=models.SET_NULL, null=True)
-    source = models.ForeignKey(DatabaseSource, verbose_name="来源", on_delete=models.SET_NULL, null=True)
-    subject = models.ManyToManyField(DatabaseSubject, verbose_name="学科")
+    category = models.ForeignKey(DatabaseCategory, verbose_name="类别", on_delete=models.SET_NULL, null=True,blank=True)
+    source = models.ForeignKey(DatabaseSource, verbose_name="来源", on_delete=models.SET_NULL, null=True,blank=True)
+    subject = models.ManyToManyField(DatabaseSubject, verbose_name="学科",null=True,blank=True)
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     update_time = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     # visits = models.IntegerField(verbose_name="总访问量", default=0)

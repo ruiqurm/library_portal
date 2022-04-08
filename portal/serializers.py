@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 from .models import *
 from django.contrib.auth.hashers import make_password
 from typing import Union
+
 """
 Custome validator
 """
@@ -157,71 +158,66 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+
 class DatabaseAdminSerializer(serializers.ModelSerializer):
+    appendix = serializers.PrimaryKeyRelatedField(many=True,allow_empty=True,write_only=True, read_only=False, queryset=File.objects.all())
+    def validate(self, data):
+        if data["appendix"]:
+            self.context["appendix"] = data["appendix"]
+            data.pop("appendix")
+        return data
+    def save(self, **kwargs):
+        item:Database = super().save(**kwargs)
+        if "appendix" in self.context:
+            l = []
+            for file in self.context["appendix"]:
+                file.content_object = item
+                l.append(file)
+            File.objects.bulk_update(l,("object_id","content_type"))
     class Meta:
         model = Database
         fields = "__all__"
 
 
-class UploadSerializer(serializers.Serializer):
-    MAX_SIZE = 1024
-    id = serializers.IntegerField()
-    obj = serializers.ChoiceField(("db", "an",))
+class UploadSerializer(serializers.ModelSerializer):
+    MAX_FILE_SIZE = 52428800
+    MAX_IMAGE_SIZE = 20971520
+    # id = serializers.IntegerField()
+    # obj = serializers.ChoiceField(("db", "an",))
+
     def validate(self, data):
-        if data["file"].size > self.MAX_SIZE:
-            raise ValidationError(f"size too big(limit {self.MAX_SIZE} Byte)")
+        if data["type"] == "image" and data["file"].size > self.MAX_IMAGE_SIZE \
+                or data["type"] == "file" and data["file"].size > self.MAX_FILE_SIZE:
+            raise ValidationError(f"size too big")
         return data
-    def to_representation(self, instance:Union[File,Image]):
+
+    def to_representation(self, instance: File):
         return {
-            "id":instance.id,
-            "url":instance.file.url
+            "id": instance.id,
+            "url": instance.file.url,
+            "type": instance.type
         }
 
-    def to_internal_value(self, data):
-        obj = None
-        if int(data["id"]) <0:
-            raise Exception(f"id >= 0")
-        try:
-            if data["obj"] == "db":
-                obj = Database.objects.get(id=data["id"])
-            elif data["obj"] == "an":
-                obj = Announcement.objects.get(id=data["id"])
-            else:
-                raise Exception("Type not exist")
-        except(Database.DoesNotExist,Announcement.DoesNotExist):
-            raise ValidationError("does not exist object")
-        return {"content_object": obj, "file": data["file"]}
-    class Meta:
-        fields = ("file","id","obj")
-
-class UploadFileSerializer(UploadSerializer,serializers.ModelSerializer):
-    MAX_SIZE = 52428800
-
     class Meta:
         model = File
-        fields = UploadSerializer.Meta.fields
+        fields = ("file","type")
 
 
-class UploadImageSerializer(UploadSerializer,serializers.ModelSerializer):
-    MAX_SIZE = 20971520
-
-    class Meta:
-        model = File
-        fields = UploadSerializer.Meta.fields
+# class UploadImageSerializer(UploadSerializer,serializers.ModelSerializer):
+#     MAX_SIZE = 20971520
+#
+#     class Meta:
+#         model = File
+#         fields = UploadSerializer.Meta.fields
 
 class FileSerializer(serializers.Serializer):
-    def to_representation(self, instance:Image):
-        if instance.content_type.name == "数据库":
-            obj_name = "db"
-        elif instance.content_type.name == "公告":
-            obj_name = "an"
-        else:
-            obj_name = "unknow"
+    def to_representation(self, instance: File):
         return {
-            "id":instance.id,
-            "file":instance.file.path,
-            "url":instance.file.url,
-            "size":instance.file.size,
-            "obj":obj_name,
-            "obj_id":instance.object_id
+            "id": instance.id,
+            "file": instance.file.path,
+            "url": instance.file.url,
+            "size": instance.file.size,
+            "type": instance.type,
+            "class": instance.content_type.name if instance.content_type else None,
+            "obj_id": instance.object_id if instance.content_type else None,
         }

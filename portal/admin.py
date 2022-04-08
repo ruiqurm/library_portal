@@ -14,7 +14,6 @@ admin.site.register(Announcement)
 admin.site.register(AnnouncementVisit)
 admin.site.register(MyUser)
 admin.site.register(File)
-admin.site.register(Image)
 
 #
 # def validate_password_strength(value):

@@ -18,8 +18,7 @@ router.register(r'admin/databaseVist',DatabaseVisitAdminViewset)
 router.register(r'admin/feedback',FeedbackAdminViewset)
 router.register(r'admin/announcement',AnnouncementAdminViewset)
 router.register(r'admin/announcementVisit',AnnouncementVisitAdminViewset)
-router.register(r'admin/media/image',ImageManagement)
-router.register(r'admin/media/file',FileManagement)
+router.register(r'admin/media',FileManagement)
 
 # router.register(r'admin/media/file',File)
 

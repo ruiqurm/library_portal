@@ -273,38 +273,17 @@ class UploadView(APIView):
     )
     def post(self,request:Request):
         """
-        需要提供class,id和文件
-        obj : `db` 或者 `an`
-        id : 对应的数据库或者公告id
-        file: 文件。对于图片，大小不超过20M，文件大小不超过50M
+        file: 文件。对于图片，大小不超过20M；对于文件，大小不超过50M
         type: `img`,`file`
         """
         if request.data:
-            if "type" not in request.data:
-                raise ValidationError("缺少type")
-            if request.data["type"] == "img":
-                serializer = UploadImageSerializer(data=request.data)
-            elif request.data["type"] == "file":
-                serializer = UploadFileSerializer(data=request.data)
-            else:
-                raise ValidationError("Unknow type")
+            serializer = UploadSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
         else:
             raise ValidationError("Not supported")
 
-class ImageManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin,DestroyModelMixin):
-    queryset = Image.objects.all()
-    serializer_class = FileSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ("content_type","object_id")
-    authentication_classes = (JWTAuthentication,)
-    pagination_class = LimitOffsetPagination
-    permission_classes = (IsAdminUser,)
-    schema = AutoSchema(
-        tags=['Admin-Upload'],
-    )
 class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin,DestroyModelMixin):
     queryset = File.objects.all()
     serializer_class = FileSerializer
