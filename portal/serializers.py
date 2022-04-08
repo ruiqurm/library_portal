@@ -153,6 +153,23 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class AnnouncementAdminSerializer(serializers.ModelSerializer):
+    appendix = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
+                                                  queryset=File.objects.all())
+
+    def validate(self, data):
+        if data["appendix"]:
+            self.context["appendix"] = data["appendix"]
+            data.pop("appendix")
+        return data
+
+    def save(self, **kwargs):
+        item: Announcement = super().save(**kwargs)
+        if "appendix" in self.context:
+            l = []
+            for file in self.context["appendix"]:
+                file.content_object = item
+                l.append(file)
+            File.objects.bulk_update(l, ("object_id", "content_type"))
     class Meta:
         model = Announcement
         fields = "__all__"

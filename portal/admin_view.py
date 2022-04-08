@@ -198,6 +198,12 @@ class DatabaseCategoryAdminViewset(ModelViewSet):
 
 
 class DatabaseAdminViewset(ModelViewSet):
+    """
+    对于post,patch
+    可以添加一个appendix参数。这个参数是一个列表，里面放着文件的主键。
+    比如"appendix":[1,2,3]
+    里面的主键对应的文件需要存在
+    """
     queryset = Database.objects.all()
     serializer_class = DatabaseAdminSerializer
     filter_backends = (filters.DjangoFilterBackend,)
@@ -237,6 +243,12 @@ class FeedbackAdminViewset(ModelViewSet):
 
 
 class AnnouncementAdminViewset(ModelViewSet):
+    """
+    对于post,patch
+    可以添加一个appendix参数。这个参数是一个列表，里面放着文件的主键。
+    比如"appendix":[1,2,3]
+    里面的主键对应的文件需要存在
+    """
     queryset = Announcement.objects.all()
     serializer_class = AnnouncementAdminSerializer
     filter_backends = (filters.DjangoFilterBackend,)
