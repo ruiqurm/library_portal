@@ -1,24 +1,20 @@
-import os
-
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.schemas.openapi import AutoSchema
-from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import (
     TokenObtainPairView as _TokenObtainPairView,
-    TokenRefreshView as _TokenRefreshView,
-    TokenVerifyView as _TokenVerifyView
+    TokenRefreshView as _TokenRefreshView
 )
-from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from .serializers import *
 
 
@@ -59,6 +55,7 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
     schema = AutoSchema(
         tags=['Admin-User'],
     )
+    lookup_field = "id"
 
     def list(self, request, *args, **kwargs):
         """
@@ -130,7 +127,7 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         serializer = self.serializer_class(user)
         return Response(serializer.data)
 
-    @action(methods=["POST","UPDATE"], detail=False, url_path="edit", permission_classes=(IsAuthenticated,))
+    @action(methods=["POST", "UPDATE"], detail=False, url_path="edit", permission_classes=(IsAuthenticated,))
     def edit(self, request, *args, **kwargs):
         """
         更新用户自己的信息
@@ -144,7 +141,7 @@ class UserViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin, UpdateMode
         data.pop("username", None)
         data.pop("is_active", None)
         data.pop("is_superuser", None)
-        if "avatar" in data and isinstance(data["avatar"],list):
+        if "avatar" in data and isinstance(data["avatar"], list):
             data["avatar"] = data["avatar"][0]
         serializer = self.get_serializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -169,6 +166,7 @@ class DatabaseSubjectAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-Databasesubject'],
     )
+    lookup_field = "id"
 
 
 class DatabaseSourceAdminViewset(ModelViewSet):
@@ -182,6 +180,7 @@ class DatabaseSourceAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-DatabaseSource'],
     )
+    lookup_field = "id"
 
 
 class DatabaseCategoryAdminViewset(ModelViewSet):
@@ -195,6 +194,7 @@ class DatabaseCategoryAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-DatabaseCategory'],
     )
+    lookup_field = "id"
 
 
 class DatabaseAdminViewset(ModelViewSet):
@@ -214,6 +214,7 @@ class DatabaseAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-Database'],
     )
+    lookup_field = "id"
 
 
 class DatabaseVisitAdminViewset(ModelViewSet):
@@ -227,6 +228,7 @@ class DatabaseVisitAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-DatabaseVisit'],
     )
+    lookup_field = "id"
 
 
 class FeedbackAdminViewset(ModelViewSet):
@@ -240,6 +242,7 @@ class FeedbackAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-Feedback'],
     )
+    lookup_field = "id"
 
 
 class AnnouncementAdminViewset(ModelViewSet):
@@ -260,6 +263,7 @@ class AnnouncementAdminViewset(ModelViewSet):
         tags=['Admin-Announcement'],
         operation_id_base='announcementAdmin',
     )
+    lookup_field = "id"
 
 
 class AnnouncementVisitAdminViewset(ModelViewSet):
@@ -273,17 +277,24 @@ class AnnouncementVisitAdminViewset(ModelViewSet):
     schema = AutoSchema(
         tags=['Admin-AnnouncementVisit'],
     )
+    lookup_field = "id"
 
-from rest_framework.parsers import MultiPartParser,FormParser
 
-class UploadView(APIView):
-    parser_classes = (MultiPartParser, FormParser)
+
+class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin):
+    parser_classes = (MultiPartParser, FormParser,JSONParser)
+    queryset = File.objects.all()
+    serializer_class = FileSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_fields = ("content_type", "object_id")
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminUser,)
     schema = AutoSchema(
         tags=['Admin-Upload'],
     )
-    def post(self,request:Request):
+    lookup_field = "id"
+    def create(self, request: Request):
         """
         file: 文件。对于图片，大小不超过20M；对于文件，大小不超过50M
         type: `img`,`file`
@@ -296,14 +307,20 @@ class UploadView(APIView):
         else:
             raise ValidationError("Not supported")
 
-class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin,DestroyModelMixin):
-    queryset = File.objects.all()
-    serializer_class = FileSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ("content_type","object_id")
-    authentication_classes = (JWTAuthentication,)
-    pagination_class = LimitOffsetPagination
-    permission_classes = (IsAdminUser,)
-    schema = AutoSchema(
-        tags=['Admin-Upload'],
-    )
+    def update(self, request, *args, **kwargs):
+        name = request.data.pop("name", None)
+        instance: File = self.get_object()
+        if name is not None:
+            instance.name = name
+            instance.save()
+        return FileSerializer(instance).data
+
+    def remove(self, request):
+        if "srcs" in request.data:
+            if isinstance(request.data["srcs"], list):
+                count, _ = File.objects.filter(file__in=request.data["srcs"]).delete()
+                return Response("delete {}".format(count))
+            else:
+                raise ValidationError("not a list,but a str; try to use json instead")
+        else:
+            raise ValidationError("not found list `srcs` in request")

@@ -153,23 +153,40 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class AnnouncementAdminSerializer(serializers.ModelSerializer):
-    appendix = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
-                                                  queryset=File.objects.all())
+    files = serializers.PrimaryKeyRelatedField(many=True,allow_empty=True,write_only=True, read_only=False, queryset=File.objects.all())
+    images = serializers.PrimaryKeyRelatedField(many=True,allow_empty=True,write_only=True, read_only=False, queryset=File.objects.all())
 
     def validate(self, data):
-        if data["appendix"]:
-            self.context["appendix"] = data["appendix"]
-            data.pop("appendix")
+        self.context["files"] = []
+        if "files" in data and isinstance(data["files"],list):
+            self.context["files"].extend(data["files"])
+            data.pop("files")
+        if "images" in data and isinstance(data["images"],list):
+            self.context["files"].extend(data["images"])
+            data.pop("images")
         return data
-
     def save(self, **kwargs):
-        item: Announcement = super().save(**kwargs)
-        if "appendix" in self.context:
+        item:Announcement = super().save(**kwargs)
+        if "files" in self.context:
             l = []
-            for file in self.context["appendix"]:
+            for file in self.context["files"]:
                 file.content_object = item
                 l.append(file)
-            File.objects.bulk_update(l, ("object_id", "content_type"))
+            File.objects.bulk_update(l,("object_id","content_type"))
+    def to_representation(self, instance:Announcement):
+        res = super().to_representation(instance)
+        files = File.objects.filter(content_type=CONTENTTYPE_ANNOUNCEMENT_ID,object_id=instance.id)
+        res["files"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        }for file in files.filter(type="file")]
+        res["images"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        }for file in files.filter(type="image")]
+        return res
     class Meta:
         model = Announcement
         fields = "__all__"
@@ -177,20 +194,40 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
 
 
 class DatabaseAdminSerializer(serializers.ModelSerializer):
-    appendix = serializers.PrimaryKeyRelatedField(many=True,allow_empty=True,write_only=True, read_only=False, queryset=File.objects.all())
+    files = serializers.PrimaryKeyRelatedField(many=True,allow_empty=True,write_only=True, read_only=False, queryset=File.objects.all())
+    images = serializers.PrimaryKeyRelatedField(many=True,allow_empty=True,write_only=True, read_only=False, queryset=File.objects.all())
+
     def validate(self, data):
-        if data["appendix"]:
-            self.context["appendix"] = data["appendix"]
-            data.pop("appendix")
+        self.context["files"] = []
+        if "files" in data and isinstance(data["files"],list):
+            self.context["files"].extend(data["files"])
+            data.pop("files")
+        if "images" in data and isinstance(data["images"],list):
+            self.context["files"].extend(data["images"])
+            data.pop("images")
         return data
     def save(self, **kwargs):
         item:Database = super().save(**kwargs)
-        if "appendix" in self.context:
+        if "files" in self.context:
             l = []
-            for file in self.context["appendix"]:
+            for file in self.context["files"]:
                 file.content_object = item
                 l.append(file)
             File.objects.bulk_update(l,("object_id","content_type"))
+    def to_representation(self, instance:Database):
+        res = super().to_representation(instance)
+        files = File.objects.filter(content_type=CONTENTTYPE_DATABASE_ID,object_id=instance.id)
+        res["files"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        }for file in files.filter(type="file")]
+        res["images"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        }for file in files.filter(type="image")]
+        return res
     class Meta:
         model = Database
         fields = "__all__"
@@ -217,20 +254,15 @@ class UploadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ("file","type")
+        fields = ("name","file","type")
 
 
-# class UploadImageSerializer(UploadSerializer,serializers.ModelSerializer):
-#     MAX_SIZE = 20971520
-#
-#     class Meta:
-#         model = File
-#         fields = UploadSerializer.Meta.fields
 
 class FileSerializer(serializers.Serializer):
     def to_representation(self, instance: File):
         return {
             "id": instance.id,
+            "name": instance.name,
             "file": instance.file.path,
             "url": instance.file.url,
             "size": instance.file.size,

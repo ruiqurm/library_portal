@@ -23,6 +23,7 @@ def rename_file(instance, filename):
 
 
 class File(models.Model):
+    name = models.TextField(verbose_name="文件名")
     file = models.FileField(upload_to=rename_file, verbose_name="文件")
     type = models.CharField(choices=(("image","图片"), ("file","文件")), verbose_name="类型",max_length=8)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,blank=True, null=True)
@@ -30,7 +31,7 @@ class File(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
-        return self.file.name
+        return self.name
 
 
 # class Image(models.Model):
@@ -166,3 +167,9 @@ class AnnouncementVisit(models.Model):
     class Meta:
         verbose_name = "公告访问IP记录"
         verbose_name_plural = verbose_name
+
+CONTENTTYPE_DATABASE_ID = 8
+CONTENTTYPE_ANNOUNCEMENT_ID = 7
+
+# CONTENTTYPE_DATABASE_ID = ContentType.objects.get(model='database').id
+# CONTENTTYPE_ANNOUNCEMENT_ID = ContentType.objects.get(model='announcement').id
