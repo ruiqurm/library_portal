@@ -200,8 +200,8 @@ class DatabaseCategoryAdminViewset(ModelViewSet):
 class DatabaseAdminViewset(ModelViewSet):
     """
     对于post,patch
-    可以添加一个appendix参数。这个参数是一个列表，里面放着文件的主键。
-    比如"appendix":[1,2,3]
+    可以添加files和images参数。这个参数是一个列表，里面放着文件的主键。
+    比如"files":[1,2,3]
     里面的主键对应的文件需要存在
     """
     queryset = Database.objects.all()
@@ -294,10 +294,11 @@ class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin):
         tags=['Admin-Upload'],
     )
     lookup_field = "id"
-    def create(self, request: Request):
+    def create(self, request: Request, *args, **kwargs):
         """
-        file: 文件。对于图片，大小不超过20M；对于文件，大小不超过50M
-        type: `img`,`file`
+        `file`: 文件。对于图片，大小不超过20M；对于文件，大小不超过50M
+        `type`: `img`或者`file`
+        `name`: 文件名
         """
         if request.data:
             serializer = UploadSerializer(data=request.data)
@@ -308,6 +309,9 @@ class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin):
             raise ValidationError("Not supported")
 
     def update(self, request, *args, **kwargs):
+        """
+        更新；但是只能更新名字
+        """
         name = request.data.pop("name", None)
         instance: File = self.get_object()
         if name is not None:
@@ -316,6 +320,15 @@ class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin):
         return FileSerializer(instance).data
 
     def remove(self, request):
+        """
+        删除srcs列表里面的文件。
+        文件的名字为"xxxxx.jpg"，需包含后缀
+        ```json
+        {
+            "srcs": ["1.jpg","2.jpg"]
+        }
+        ```
+        """
         if "srcs" in request.data:
             if isinstance(request.data["srcs"], list):
                 count, _ = File.objects.filter(file__in=request.data["srcs"]).delete()
