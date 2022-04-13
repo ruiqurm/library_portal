@@ -174,9 +174,9 @@ class AnnouncementFilter(filters.FilterSet):
             return queryset
 
 
-class AnnouncementViewset(GenericViewSet, ListModelMixin):
+class AnnouncementViewset(GenericViewSet, ListModelMixin,RetrieveModelMixin):
     queryset = Announcement.objects.filter(is_available=True)
-    serializer_class = AnnouncementSerializer
+    serializer_class = AnnouncementListSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = AnnouncementFilter
     pagination_class = LimitOffsetPagination

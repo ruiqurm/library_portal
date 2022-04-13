@@ -61,13 +61,24 @@ class DatabaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Database
         fields = "__all__"
-
+        # extra_kwargs = {'visit': {'read_only': True}, 'files': {'read_only': True}, 'imgs': {'read_only': True}}
     def to_representation(self, instance: Database):
         """
         查一下访问量
         """
         serialized_data = super().to_representation(instance)
         serialized_data["visit"] = DatabaseVisit.objects.filter(database=instance).count()
+        files = File.objects.filter(content_type=CONTENTTYPE_ANNOUNCEMENT_ID, object_id=instance.id)
+        serialized_data["files"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        } for file in files.filter(type="file")]
+        serialized_data["images"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        } for file in files.filter(type="image")]
         return serialized_data
 
 
@@ -82,6 +93,22 @@ class FeedbackSerializer(serializers.ModelSerializer):
         model = Feedback
         fields = "__all__"
 
+class AnnouncementListSerializer(serializers.ModelSerializer):
+    publisher = MyUserSerializer()
+
+    # visits = serializers.IntegerField(read_only=True)
+    class Meta:
+        model = Announcement
+        fields = "__all__"
+        extra_kwargs = {'visit': {'read_only': True},'files': {'read_only': True},'imgs': {'read_only': True}}
+
+    def to_representation(self, instance: Announcement):
+        """
+        查一下访问量
+        """
+        serialized_data = super().to_representation(instance)
+        serialized_data["visit"] = AnnouncementVisit.objects.filter(announcement=instance).count()
+        return serialized_data
 
 class AnnouncementSerializer(serializers.ModelSerializer):
     publisher = MyUserSerializer()
@@ -90,7 +117,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Announcement
         fields = "__all__"
-        extra_kwargs = {'visit': {'read_only': True}}
+        extra_kwargs = {'visit': {'read_only': True},'files': {'read_only': True},'imgs': {'read_only': True}}
 
     def to_representation(self, instance: Announcement):
         """
@@ -98,6 +125,17 @@ class AnnouncementSerializer(serializers.ModelSerializer):
         """
         serialized_data = super().to_representation(instance)
         serialized_data["visit"] = AnnouncementVisit.objects.filter(announcement=instance).count()
+        files = File.objects.filter(content_type=CONTENTTYPE_ANNOUNCEMENT_ID, object_id=instance.id)
+        serialized_data["files"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        } for file in files.filter(type="file")]
+        serialized_data["images"] = [{
+            "id": file.id,
+            "name": file.name,
+            "url": file.file.url,
+        } for file in files.filter(type="image")]
         return serialized_data
 
 
