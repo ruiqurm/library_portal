@@ -150,7 +150,11 @@ class AnnouncementFilter(filters.FilterSet):
     has_database = filters.CharFilter(method='_has_database', label="是否关联数据库")
     database_id = filters.CharFilter(method='_database_id', label="数据库id")
     search = filters.CharFilter(method='_search', label="搜索数据库")
-
+    stick = filters.BooleanFilter(method="_stick",label="置顶")
+    def _stick(self, queryset: Announcement.objects.all(), name, value: bool, *args, **kwargs):
+        if value:
+            return queryset.order_by("-stick")
+        return queryset
     def _has_database(self, queryset: Announcement.objects.all(), name, value: str, *args, **kwargs):
         if value.lower() == "true":
             return queryset.filter(database__isnull=False)

@@ -149,7 +149,7 @@ class Announcement(models.Model):
     content = models.TextField(verbose_name="内容", blank=True)
     database = models.ForeignKey(Database, verbose_name="关联数据库", on_delete=models.CASCADE, null=True, blank=True)
     is_available = models.BooleanField(verbose_name="是否有效")
-
+    stick = models.BooleanField(default=False,verbose_name="置顶")
     class Meta:
         ordering = ['-update_time', '-create_time']
         verbose_name = "公告"
