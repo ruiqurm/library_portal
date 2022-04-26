@@ -29,7 +29,7 @@ class File(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,blank=True, null=True)
     object_id = models.PositiveIntegerField(blank=True, null=True)
     content_object = GenericForeignKey('content_type', 'object_id')
-
+    is_static = models.BooleanField(verbose_name="是否不与其他对象绑定",default=False)
     def __str__(self):
         return self.name
 
@@ -46,7 +46,6 @@ class File(models.Model):
 
 class MyUser(AbstractUser):
     avatar = models.ImageField(verbose_name="头像", blank=True, null=True, upload_to=rename_file)
-
     def __str__(self):
         return f"{self.username}"
 
@@ -139,7 +138,16 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"[{self.ip} 内容:{self.message[:30]}"
+class AnnouncementTag(models.Model):
+    name = models.CharField(max_length=128, verbose_name="名称")
 
+    class Meta:
+        verbose_name = "公告分类"
+        verbose_name_plural = verbose_name
+        unique_together = ("name",)
+
+    def __str__(self):
+        return f"{self.name}"
 
 class Announcement(models.Model):
     title = models.TextField(verbose_name="标题")
@@ -150,6 +158,8 @@ class Announcement(models.Model):
     database = models.ForeignKey(Database, verbose_name="关联数据库", on_delete=models.CASCADE, null=True, blank=True)
     is_available = models.BooleanField(verbose_name="是否有效")
     stick = models.BooleanField(default=False,verbose_name="置顶")
+    contact = models.TextField(default="",blank=True,verbose_name="联系方式")
+    tags = models.ForeignKey(AnnouncementTag,on_delete=models.SET_NULL,verbose_name="分类",null=True,blank=True)
     class Meta:
         ordering = ['-update_time', '-create_time']
         verbose_name = "公告"

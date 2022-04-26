@@ -210,7 +210,7 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
             for file in self.context["files"]:
                 file.content_object = item
                 l.append(file)
-            File.objects.bulk_update(l,("object_id","content_type"))
+            File.objects.filter(is_static=False).bulk_update(l,("object_id","content_type"))
     def to_representation(self, instance:Announcement):
         res = super().to_representation(instance)
         files = File.objects.filter(content_type=CONTENTTYPE_ANNOUNCEMENT_ID,object_id=instance.id)
@@ -218,12 +218,12 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
             "id": file.id,
             "name": file.name,
             "url": file.file.url,
-        }for file in files.filter(type="file")]
+        }for file in files.filter(type="file",is_static=False)]
         res["images"] = [{
             "id": file.id,
             "name": file.name,
             "url": file.file.url,
-        }for file in files.filter(type="image")]
+        }for file in files.filter(type="image",is_static=False)]
         return res
     class Meta:
         model = Announcement
@@ -251,7 +251,7 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
             for file in self.context["files"]:
                 file.content_object = item
                 l.append(file)
-            File.objects.bulk_update(l,("object_id","content_type"))
+            File.objects.filter(is_static=False).bulk_update(l,("object_id","content_type"))
     def to_representation(self, instance:Database):
         res = super().to_representation(instance)
         files = File.objects.filter(content_type=CONTENTTYPE_DATABASE_ID,object_id=instance.id)
@@ -259,12 +259,12 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
             "id": file.id,
             "name": file.name,
             "url": file.file.url,
-        }for file in files.filter(type="file")]
+        }for file in files.filter(type="file",is_static=False)]
         res["images"] = [{
             "id": file.id,
             "name": file.name,
             "url": file.file.url,
-        }for file in files.filter(type="image")]
+        }for file in files.filter(type="image",is_static=False)]
         return res
     class Meta:
         model = Database
@@ -292,7 +292,7 @@ class UploadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ("name","file","type")
+        fields = ("name","file","type","is_staitc")
 
 
 

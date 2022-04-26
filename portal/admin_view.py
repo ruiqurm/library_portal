@@ -281,12 +281,13 @@ class AnnouncementVisitAdminViewset(ModelViewSet):
 
 
 
-class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin):
+
+class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin,DestroyModelMixin):
     parser_classes = (MultiPartParser, FormParser,JSONParser)
     queryset = File.objects.all()
     serializer_class = FileSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ("content_type", "object_id")
+    filter_fields = ("content_type", "object_id","is_static")
     authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
@@ -299,6 +300,7 @@ class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin):
         `file`: 文件。对于图片，大小不超过20M；对于文件，大小不超过50M
         `type`: `img`或者`file`
         `name`: 文件名
+        `is_staitc`: 是否不与其他对象绑定。True表示是一个长期存在的文件。默认为False，不需要填
         """
         if request.data:
             serializer = UploadSerializer(data=request.data)
@@ -321,19 +323,19 @@ class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin):
 
     def remove(self, request):
         """
-        删除srcs列表里面的文件。
+        删除files列表里面的文件。
         文件的名字为"xxxxx.jpg"，需包含后缀
         ```json
         {
-            "srcs": ["1.jpg","2.jpg"]
+            "files": ["1.jpg","2.jpg"]
         }
         ```
         """
-        if "srcs" in request.data:
-            if isinstance(request.data["srcs"], list):
-                count, _ = File.objects.filter(file__in=request.data["srcs"]).delete()
+        if "files" in request.data:
+            if isinstance(request.data["files"], list):
+                count, _ = File.objects.filter(file__in=request.data["files"]).delete()
                 return Response("delete {}".format(count))
             else:
                 raise ValidationError("not a list,but a str; try to use json instead")
         else:
-            raise ValidationError("not found list `srcs` in request")
+            raise ValidationError("not found list `files` in request")
