@@ -12,3 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - 公告添加标签字段
 - 公告添加联系方式字段
+- 
+## [0.0.1] - 2022-05-06
+### Added
+- model: `AnnouncementTag` 及其api(get,post,delete,update)
+### Changed
+- 公告返回数据时，如果有数据库，会返回id,name(标题),publisher(发布者)
+- `AnnouncementTag`,`DatabaseCategory`,`DatabaseSource`,`DatabaseSubject` 会返回id
+### Fixed
+- `is_static`拼写错误

@@ -244,6 +244,18 @@ class FeedbackAdminViewset(ModelViewSet):
     )
     lookup_field = "id"
 
+class AnnouncementTagViewset(ModelViewSet):
+    queryset = AnnouncementTag.objects.all()
+    serializer_class = AnnouncementTagSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_fields = "__all__"
+    pagination_class = LimitOffsetPagination
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAdminUser,)
+    schema = AutoSchema(
+        tags=['Admin-AnnouncementTag'],
+    )
+    lookup_field = "id"
 
 class AnnouncementAdminViewset(ModelViewSet):
     """
