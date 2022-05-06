@@ -92,7 +92,7 @@ class DatabaseSerializer(serializers.ModelSerializer):
         """
         serialized_data = super().to_representation(instance)
         serialized_data["visit"] = DatabaseVisit.objects.filter(database=instance).count()
-        files = File.objects.filter(content_type=CONTENTTYPE_ANNOUNCEMENT_ID, object_id=instance.id)
+        files = File.objects.filter(content_type=ContentType.objects.get_for_model(instance), object_id=instance.id)
         serialized_data["files"] = [{
             "id": file.id,
             "name": file.name,
@@ -154,7 +154,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
         """
         serialized_data = super().to_representation(instance)
         serialized_data["visit"] = AnnouncementVisit.objects.filter(announcement=instance).count()
-        files = File.objects.filter(content_type=CONTENTTYPE_ANNOUNCEMENT_ID, object_id=instance.id)
+        files = File.objects.filter(content_type=ContentType.objects.get_for_model(instance), object_id=instance.id)
         serialized_data["files"] = [{
             "id": file.id,
             "name": file.name,
@@ -224,9 +224,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 class AnnouncementAdminSerializer(serializers.ModelSerializer):
     files = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
-                                               queryset=File.objects.all())
+                                               queryset=File.objects.all(),required=False)
     images = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
-                                                queryset=File.objects.all())
+                                                queryset=File.objects.all(),required=False)
     publisher = serializers.HiddenField(default=serializers.CurrentUserDefault())
     def validate(self, data):
         self.context["files"] = []
@@ -249,7 +249,7 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance: Announcement):
         res = super().to_representation(instance)
-        files = File.objects.filter(content_type=CONTENTTYPE_ANNOUNCEMENT_ID, object_id=instance.id)
+        files = File.objects.filter(content_type=ContentType.objects.get_for_model(instance), object_id=instance.id)
         res["files"] = [{
             "id": file.id,
             "name": file.name,
@@ -273,9 +273,9 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
 
 class DatabaseAdminSerializer(serializers.ModelSerializer):
     files = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
-                                               queryset=File.objects.all())
+                                               queryset=File.objects.all(),required=False)
     images = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
-                                                queryset=File.objects.all())
+                                                queryset=File.objects.all(),required=False)
     publisher = serializers.HiddenField(default=serializers.CurrentUserDefault())
     def validate(self, data):
         self.context["files"] = []
@@ -298,7 +298,7 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance: Database):
         res = super().to_representation(instance)
-        files = File.objects.filter(content_type=CONTENTTYPE_DATABASE_ID, object_id=instance.id)
+        files = File.objects.filter(content_type=ContentType.objects.get_for_model(instance), object_id=instance.id)
         res["files"] = [{
             "id": file.id,
             "name": file.name,
@@ -314,7 +314,6 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Database
         fields = "__all__"
-
 
 class UploadSerializer(serializers.ModelSerializer):
     MAX_FILE_SIZE = 52428800
