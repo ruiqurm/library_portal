@@ -2,8 +2,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .models import *
 from django.contrib.auth.hashers import make_password
-from typing import Union
-
+from .utils import get_by_id_if_exists_and_serialize
 """
 Custome validator
 """
@@ -261,7 +260,8 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
             "name": file.name,
             "url": file.file.url,
         } for file in files.filter(type="image", is_static=False)]
-
+        # tags
+        res["tags"] = get_by_id_if_exists_and_serialize(AnnouncementTag,AnnouncementTagSerializer,res["tags"])
         # 返回详细的数据库内容
         if res["database"] is not None:
             res["database"] = DatabaseShortSerializer(Database.objects.get(id=res["database"])).data
@@ -310,6 +310,11 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
             "name": file.name,
             "url": file.file.url,
         } for file in files.filter(type="image", is_static=False)]
+
+
+        res["category"] = get_by_id_if_exists_and_serialize(DatabaseCategory,DatabaseCategorySerializer,res["category"])
+        res["source"] = get_by_id_if_exists_and_serialize(DatabaseCategory,DatabaseSourceSerializer,res["source"])
+        res["subject"] = get_by_id_if_exists_and_serialize(DatabaseSubject,DatabaseSubjectSerializer,res["subject"])
         return res
 
     class Meta:
