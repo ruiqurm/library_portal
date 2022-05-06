@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2022-05-06
 ### Added
 - model: `AnnouncementTag` 及其api(get,post,delete,update)
+- api: 通过id获取文件 `/api/admin/media/{id}/stream`
+- 
 ### Changed
 - 公告返回数据时，如果有数据库，会返回id,name(标题),publisher(发布者)
 - `AnnouncementTag`,`DatabaseCategory`,`DatabaseSource`,`DatabaseSubject` 会返回id

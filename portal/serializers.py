@@ -60,13 +60,19 @@ class DatabaseGeneralSerializer(serializers.ModelSerializer):
 
 class DatabaseShortSerializer(serializers.ModelSerializer):
     """
-    只包含id,名字，发布者的信息
+    对于序列化，只包含id,名字，发布者的信息
+    对于反序列化，只要求有id
     """
-    publisher = MyUserSerializer()
-
+    publisher = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+     )
     class Meta:
         model = Database
         fields = ('id', 'publisher', 'name')
+        extra_kwargs = {
+            'name': {'read_only': True},
+        }
 
 
 class DatabaseSerializer(serializers.ModelSerializer):
@@ -114,7 +120,6 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 class AnnouncementListSerializer(serializers.ModelSerializer):
     publisher = MyUserSerializer()
-    database = DatabaseShortSerializer()
 
     # visits = serializers.IntegerField(read_only=True)
     class Meta:
@@ -128,12 +133,14 @@ class AnnouncementListSerializer(serializers.ModelSerializer):
         """
         serialized_data = super().to_representation(instance)
         serialized_data["visit"] = AnnouncementVisit.objects.filter(announcement=instance).count()
+        # 返回详细的数据库内容
+        if serialized_data["database"] is not None:
+            serialized_data["database"] = DatabaseShortSerializer(Database.objects.get(id=serialized_data["database"])).data
         return serialized_data
 
 
 class AnnouncementSerializer(serializers.ModelSerializer):
     publisher = MyUserSerializer()
-    database = DatabaseShortSerializer()
 
     # visits = serializers.IntegerField(read_only=True)
     class Meta:
@@ -158,6 +165,9 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             "name": file.name,
             "url": file.file.url,
         } for file in files.filter(type="image")]
+        # 返回详细的数据库内容
+        if serialized_data["database"] is not None:
+            serialized_data["database"] = DatabaseShortSerializer(Database.objects.get(id=serialized_data["database"])).data
         return serialized_data
 
 
@@ -217,8 +227,7 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
                                                queryset=File.objects.all())
     images = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
                                                 queryset=File.objects.all())
-    database = DatabaseShortSerializer()
-
+    publisher = serializers.HiddenField(default=serializers.CurrentUserDefault())
     def validate(self, data):
         self.context["files"] = []
         if "files" in data and isinstance(data["files"], list):
@@ -251,6 +260,10 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
             "name": file.name,
             "url": file.file.url,
         } for file in files.filter(type="image", is_static=False)]
+
+        # 返回详细的数据库内容
+        if res["database"] is not None:
+            res["database"] = DatabaseShortSerializer(Database.objects.get(id=res["database"])).data
         return res
 
     class Meta:
@@ -263,7 +276,7 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
                                                queryset=File.objects.all())
     images = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
                                                 queryset=File.objects.all())
-
+    publisher = serializers.HiddenField(default=serializers.CurrentUserDefault())
     def validate(self, data):
         self.context["files"] = []
         if "files" in data and isinstance(data["files"], list):

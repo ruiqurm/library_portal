@@ -14,8 +14,9 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView as _TokenObtainPairView,
     TokenRefreshView as _TokenRefreshView
 )
-
+from django.shortcuts import get_object_or_404
 from .serializers import *
+from django.http import StreamingHttpResponse
 
 
 class TokenObtainPairView(_TokenObtainPairView):
@@ -351,3 +352,13 @@ class FileManagement(GenericViewSet, ListModelMixin, RetrieveModelMixin,DestroyM
                 raise ValidationError("not a list,but a str; try to use json instead")
         else:
             raise ValidationError("not found list `files` in request")
+    @action(methods=["GET"], detail=True, url_path="stream")
+    def get_stream(self,request,id):
+        file:File = get_object_or_404(File,id=id)
+        from rest_framework.response import Response
+        import mimetypes
+        from django.http import FileResponse
+        response = FileResponse(open(file.file.path, 'rb'), content_type=mimetypes.guess_type(file.file.path)[0])
+        response['Content-Disposition'] = f"attachment; filename={file.file.name}"
+        response['Content-Length'] = file.file.size
+        return response
