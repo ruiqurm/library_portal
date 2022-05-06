@@ -120,7 +120,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 class AnnouncementListSerializer(serializers.ModelSerializer):
     publisher = MyUserSerializer()
-
+    tags = AnnouncementTagSerializer()
     # visits = serializers.IntegerField(read_only=True)
     class Meta:
         model = Announcement
@@ -141,7 +141,7 @@ class AnnouncementListSerializer(serializers.ModelSerializer):
 
 class AnnouncementSerializer(serializers.ModelSerializer):
     publisher = MyUserSerializer()
-
+    tags = AnnouncementTagSerializer()
     # visits = serializers.IntegerField(read_only=True)
     class Meta:
         model = Announcement
@@ -228,6 +228,7 @@ class AnnouncementAdminSerializer(serializers.ModelSerializer):
     images = serializers.PrimaryKeyRelatedField(many=True, allow_empty=True, write_only=True, read_only=False,
                                                 queryset=File.objects.all(),required=False)
     publisher = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     def validate(self, data):
         self.context["files"] = []
         if "files" in data and isinstance(data["files"], list):

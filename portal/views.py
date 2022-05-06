@@ -111,7 +111,7 @@ class DatabaseRetrieveViewset(GenericViewSet, RetrieveModelMixin):
         data = {"ip": ip, "database": id}
         # today = date.today()
         if DatabaseVisit.objects.filter(ip=ip).count() > 0:
-            return Response({"msg": "You have visited the page"}, status=400)
+            return Response({"msg": "You have visited the page"})
         save_data = DatabaseVisitSerializer(data=data)
         save_data.is_valid(raise_exception=True)
         save_data.save()
@@ -221,7 +221,7 @@ class AnnouncementRetrieveViewset(GenericViewSet, RetrieveModelMixin):
         return super(AnnouncementRetrieveViewset, self).retrieve(request, *args, **kwargs)
 
     @action(methods=["GET"], detail=True, url_path="visit")
-    def visit_database(self, request, id, **kwarg):
+    def visit_announcement(self, request, id, **kwarg):
         """
         标记访问了该数据库
 
@@ -230,7 +230,7 @@ class AnnouncementRetrieveViewset(GenericViewSet, RetrieveModelMixin):
         ip = request.META.get("REMOTE_ADDR")
         data = {"ip": ip, "announcement": id}
         if AnnouncementVisit.objects.filter(ip=ip).count() > 0:
-            return Response({"msg": "You have visited the page"}, status=400)
+            return Response({"msg": "You have visited the page"})
         save_data = AnnouncementVisitSerializer(data=data)
         save_data.is_valid(raise_exception=True)
         save_data.save()

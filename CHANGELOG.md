@@ -17,9 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - model: `AnnouncementTag` 及其api(get,post,delete,update)
 - api: 通过id获取文件 `/api/admin/media/{id}/stream`
-- 
 ### Changed
 - 公告返回数据时，如果有数据库，会返回id,name(标题),publisher(发布者)
 - `AnnouncementTag`,`DatabaseCategory`,`DatabaseSource`,`DatabaseSubject` 会返回id
+- 公告返回tags包含名称，而不是只有id
+- ip标识已访问，第二次不会返回400错误
 ### Fixed
 - `is_static`拼写错误
