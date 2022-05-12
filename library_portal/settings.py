@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
-    "tinymce",
     "portal.apps.PortalConfig",
 ]
 
@@ -142,3 +141,8 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+CSRF_TRUSTED_ORIGINS=[
+    'https://\*',
+    'http://*'
+]
+# CORS_ALLOW_ALL_ORIGINS = True

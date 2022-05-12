@@ -1,5 +1,4 @@
 from django.db.models import Q
-from django_filters import rest_framework as filters
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.pagination import LimitOffsetPagination
@@ -9,27 +8,11 @@ from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from datetime import date
-
+from django_filters import rest_framework as filters
+from .filter import DatabaseListFilter,AnnouncementFilter
 from .serializers import *
 
 
-class DatabaseListFilter(filters.FilterSet):
-    category = filters.CharFilter(field_name="category__name", lookup_expr="iexact", label="分类名")
-    source = filters.CharFilter(field_name="source__name", lookup_expr="iexact", label="来源")
-    subject = filters.CharFilter(field_name="subject__name", lookup_expr='iexact', label="学科")
-    first_letter = filters.CharFilter(method="filter_by_first_letter", label='第一个字母')
-    name = filters.CharFilter(field_name="name", lookup_expr='icontains', label='标题')
-    content = filters.CharFilter(field_name="content", lookup_expr='icontains', label='内容')
-
-    def filter_by_first_letter(self, queryset, name, value, *args, **kwargs):
-        if len(value) == 1 and value.isalpha():
-            return queryset.filter(name__istartswith=value)
-        else:
-            return queryset
-
-    class Meta:
-        model = Database
-        fields = ['is_Chinese', 'is_on_trial']
 
 
 class DatabaseListViewset(GenericViewSet, ListModelMixin, RetrieveModelMixin):
@@ -107,7 +90,9 @@ class DatabaseRetrieveViewset(GenericViewSet, RetrieveModelMixin):
 
         每个ip只能标记一次，第二次访问会返回400
         """
-        ip = request.META.get("REMOTE_ADDR")
+        ip =request.META.get('X-Real-IP',None)
+        if ip is None:
+            ip = request.META.get("REMOTE_ADDR")
         data = {"ip": ip, "database": id}
         # today = date.today()
         if DatabaseVisit.objects.filter(ip=ip).count() > 0:
@@ -133,7 +118,9 @@ class FeedbackView(APIView):
         每个ip每天可以新建2个反馈
         """
         data = dict(request.data)
-        ip = request.META.get("REMOTE_ADDR")
+        ip = request.META.get('X-Real-IP', None)
+        if ip is None:
+            ip = request.META.get("REMOTE_ADDR")
         data["ip"] = ip
         today = date.today()
         if Feedback.objects.filter(create_time__year=today.year, create_time__month=today.month,
@@ -145,37 +132,6 @@ class FeedbackView(APIView):
         save_data.save()
         return Response(save_data.data, status=201)
 
-
-class AnnouncementFilter(filters.FilterSet):
-    has_database = filters.CharFilter(method='_has_database', label="是否关联数据库")
-    database_id = filters.CharFilter(method='_database_id', label="数据库id")
-    search = filters.CharFilter(method='_search', label="搜索数据库")
-    stick = filters.BooleanFilter(method="_stick",label="置顶")
-    def _stick(self, queryset: Announcement.objects.all(), name, value: bool, *args, **kwargs):
-        if value:
-            return queryset.order_by("-stick")
-        return queryset
-    def _has_database(self, queryset: Announcement.objects.all(), name, value: str, *args, **kwargs):
-        if value.lower() == "true":
-            return queryset.filter(database__isnull=False)
-        elif value.lower() == "false":
-            return queryset.filter(database__isnull=True)
-        else:
-            return queryset
-
-    def _search(self, queryset: Announcement.objects.all(), name, value: str, *args, **kwargs):
-        if value is not None and value != "":
-            return queryset.filter(
-                Q(title__icontains=value) | Q(title__icontains=value) | Q(content__icontains=value) | Q(
-                    content__icontains=value)).all()
-        else:
-            return queryset
-
-    def _database_id(self, queryset: Announcement.objects.all(), name, value: str, *args, **kwargs):
-        if value.isdigit():
-            return queryset.filter(database_id=value)
-        else:
-            return queryset
 
 
 class AnnouncementViewset(GenericViewSet, ListModelMixin,RetrieveModelMixin):
@@ -227,7 +183,9 @@ class AnnouncementRetrieveViewset(GenericViewSet, RetrieveModelMixin):
 
         每个ip只能标记一次，第二次访问会返回400
         """
-        ip = request.META.get("REMOTE_ADDR")
+        ip = request.META.get('X-Real-IP', None)
+        if ip is None:
+            ip = request.META.get("REMOTE_ADDR")
         data = {"ip": ip, "announcement": id}
         if AnnouncementVisit.objects.filter(ip=ip).count() > 0:
             return Response({"msg": "You have visited the page"})

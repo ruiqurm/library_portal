@@ -5,3 +5,5 @@ __pycache__
 *.sqlite3
 *.yml
 static
+node_modules
+data

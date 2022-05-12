@@ -201,7 +201,7 @@ for name in tqdm.tqdm(database):
                  content=en_name, is_available=True)
     name_to_subject[en_name] = subjectids
     save_result.append(d)
-Database.objects.bulk_create(
+save_result = Database.objects.bulk_create(
     save_result
 )
 ThroughModel = Database.subject.through

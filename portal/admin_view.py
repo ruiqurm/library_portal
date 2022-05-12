@@ -16,8 +16,7 @@ from rest_framework_simplejwt.views import (
 )
 from django.shortcuts import get_object_or_404
 from .serializers import *
-from django.http import StreamingHttpResponse
-
+from .filter import *
 
 class TokenObtainPairView(_TokenObtainPairView):
     """
@@ -208,7 +207,7 @@ class DatabaseAdminViewset(ModelViewSet):
     queryset = Database.objects.all()
     serializer_class = DatabaseAdminSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = "__all__"
+    filterset_class = DatabaseListFilter
     authentication_classes = (JWTAuthentication,)
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminUser,)
@@ -249,7 +248,7 @@ class AnnouncementTagViewset(ModelViewSet):
     queryset = AnnouncementTag.objects.all()
     serializer_class = AnnouncementTagSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = "__all__"
+    filterset_class = AnnouncementFilter
     pagination_class = LimitOffsetPagination
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminUser,)
