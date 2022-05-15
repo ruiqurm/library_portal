@@ -313,7 +313,7 @@ class DatabaseAdminSerializer(serializers.ModelSerializer):
 
 
         res["category"] = get_by_id_if_exists_and_serialize(DatabaseCategory,DatabaseCategorySerializer,res["category"])
-        res["source"] = get_by_id_if_exists_and_serialize(DatabaseCategory,DatabaseSourceSerializer,res["source"])
+        res["source"] = get_by_id_if_exists_and_serialize(DatabaseSource,DatabaseSourceSerializer,res["source"])
         res["subject"] = get_by_id_if_exists_and_serialize(DatabaseSubject,DatabaseSubjectSerializer,res["subject"])
         return res
 
